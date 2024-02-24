@@ -37,10 +37,10 @@ class MyContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        NFCStatusWidget(),
+      children: const [
+        NFCStatusChecker(),
         SizedBox(height: 20), // 余白を追加
         RadioExample(),
       ],
@@ -48,22 +48,39 @@ class MyContent extends StatelessWidget {
   }
 }
 
-class NFCStatusWidget extends StatelessWidget {
-  const NFCStatusWidget({super.key});
+class NFCStatusChecker extends StatefulWidget {
+  const NFCStatusChecker({super.key});
+
+  @override
+  State<NFCStatusChecker> createState() => _NFCStatusCheckerState();
+}
+
+class _NFCStatusCheckerState extends State<NFCStatusChecker> {
+  String _nfcStatus = 'Checking NFC availability...';
+
+  @override
+  void initState() {
+    super.initState();
+    _checkNFC();
+  }
+
+  Future<void> _checkNFC() async {
+    bool isAvailable = await NfcManager.instance.isAvailable();
+    setState(() {
+      _nfcStatus = isAvailable ? 'NFC is available' : 'NFC is not available';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
-      future: NfcManager.instance.isAvailable(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
-        } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        } else {
-          return Text('NFCstate: ${snapshot.data}');
-        }
-      },
+    return Column(
+      children: [
+        Text(_nfcStatus),
+        ElevatedButton(
+          onPressed: _checkNFC,
+          child: const Text('Check NFC Availability'),
+        ),
+      ],
     );
   }
 }
